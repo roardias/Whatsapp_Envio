@@ -35,9 +35,12 @@ class EmojiSelector(tk.Toplevel):
         super().__init__(parent)
         self.callback = callback
         self.title("Selecionar Emoji")
-        self.geometry("600x400")
+        self.geometry("900x700")
         self.configure(bg=COLORS["bg_gray"])
         
+        # Maximizar a janela
+        self.state('zoomed')  # Para Windows
+
         # Adicionar ícone e estilo à janela
         self.iconbitmap("assets/emoji_icon.ico") if os.path.exists("assets/emoji_icon.ico") else None
         
@@ -221,7 +224,7 @@ class WhatsAppInterface:
 
     def create_toolbar_button(self, parent, text, command, position):
         """Criar botão para a barra de ferramentas"""
-        btn = ttk.Button(parent, text=text, command=command, style="Toolbar.TButton")
+        btn = ttk.Button(parent, text=text, command=command, style="Accent.TButton")
         btn.pack(side=tk.LEFT, padx=5, pady=5)
         return btn
 
@@ -414,12 +417,9 @@ class WhatsAppInterface:
         self.message_entry.pack(fill=tk.BOTH, expand=True)
 
         # Botão de enviar com visual melhorado
-        self.send_button = ttk.Button(
-            self.input_frame, 
-            text="Enviar",
-            style="Send.TButton",
-            command=self.send_message
-        )
+        self.send_button = ttk.Button(self.input_frame, text="Enviar", 
+                            command=self.send_message,
+                            style="Accent.TButton")
         self.send_button.pack(side=tk.RIGHT)
 
         # Vincular tecla Enter para enviar mensagem
@@ -442,8 +442,11 @@ class WhatsAppInterface:
             self.attachment_frame,
             text="❌",
             width=2,
-            command=self.clear_attachment
+            command=self.clear_attachment,
+            style="Accent.TButton"
         )
+
+
         # O botão só será exibido quando houver um anexo
 
     def clear_attachment(self):
@@ -983,7 +986,9 @@ class WhatsAppInterface:
         button_frame.grid(row=3, column=0, sticky="e")
         
         ttk.Button(button_frame, text="Cancelar", 
-                  command=dialog.destroy).pack(side=tk.LEFT, padx=(0, 10))
+                command=dialog.destroy,
+                style="Accent.TButton").pack(side=tk.LEFT, padx=(0, 10))
+
         
         ttk.Button(button_frame, text="Iniciar Conversa", 
                   style="Accent.TButton", 
@@ -1080,8 +1085,10 @@ class WhatsAppInterface:
         button_frame = ttk.Frame(settings_window)
         button_frame.pack(fill=tk.X, padx=10, pady=10)
         
-        ttk.Button(button_frame, text="Cancelar", 
-                  command=settings_window.destroy).pack(side=tk.RIGHT, padx=(10, 0))
+        # Na função show_settings, remova o estilo Accent.TButton do botão Cancelar
+        ttk.Button(button_frame, text="Cancelar",
+                command=settings_window.destroy).pack(side=tk.RIGHT, padx=(10, 0))
+
         
         ttk.Button(button_frame, text="Salvar", 
                   style="Accent.TButton").pack(side=tk.RIGHT)
@@ -1136,8 +1143,10 @@ class WhatsAppInterface:
         buttons_frame = ttk.Frame(main_frame)
         buttons_frame.pack(fill=tk.X, pady=10)
         
-        ttk.Button(buttons_frame, text="Cancelar", 
-                  command=export_window.destroy).pack(side=tk.RIGHT, padx=(10, 0))
+        # Na função export_conversations, remova o estilo Accent.TButton do botão Cancelar
+        ttk.Button(buttons_frame, text="Cancelar",
+                command=export_window.destroy).pack(side=tk.RIGHT, padx=(10, 0))
+
         
         def export_selected():
             selected_indices = contacts_listbox.curselection()
@@ -1211,7 +1220,9 @@ class WhatsAppInterface:
         copyright_info.pack(pady=(20, 0))
         
         # Botão OK
-        ttk.Button(main_frame, text="OK", command=about_window.destroy).pack(pady=(20, 0))
+        ttk.Button(main_frame, text="OK", 
+                command=about_window.destroy,
+                style="Accent.TButton").pack(pady=(20, 0))
 
     def test_highlight(self):
         """Função de teste para destacar manualmente um número"""
@@ -1326,7 +1337,10 @@ class TemplateSelector(tk.Toplevel):
         buttons_frame = ttk.Frame(main_frame)
         buttons_frame.pack(fill="x", padx=5, pady=10)
         
-        ttk.Button(buttons_frame, text="Cancelar", command=self.destroy).pack(side="right", padx=5)
+        ttk.Button(buttons_frame, text="Cancelar", 
+                command=self.destroy,
+                style="Accent.TButton").pack(side="right", padx=5)
+
         ttk.Button(buttons_frame, text="Selecionar", command=self.select_template, 
                   style="Accent.TButton").pack(side="right", padx=5)
         
@@ -1459,7 +1473,21 @@ class BulkSendWindow(tk.Toplevel):
         super().__init__(parent)
         self.parent = parent
         self.title("Envio em Massa")
-        self.geometry("900x700")
+        
+        # Tentativa de maximizar em diferentes sistemas
+        try:
+            # Método para Windows
+            if os.name == 'nt':
+                self.state('zoomed')
+            else:
+                # Método para Linux/Mac
+                self.attributes('-zoomed', True)
+        except:
+            # Método alternativo se os anteriores falharem
+            width = self.winfo_screenwidth() - 50
+            height = self.winfo_screenheight() - 50
+            self.geometry(f"{width}x{height}+25+25")
+        
         self.configure(bg=COLORS["bg_gray"])
         
         # Para uso em sistemas Windows com ícone disponível
@@ -1472,175 +1500,266 @@ class BulkSendWindow(tk.Toplevel):
         
         # Componentes da interface
         self.create_widgets()
+
+    def maximize_window(self):
+        """Tenta maximizar a janela de várias maneiras"""
+        try:
+            # Tenta maximizar com state (Windows)
+            self.state('zoomed')
+        except:
+            try:
+                # Tenta maximizar com attributes (Linux)
+                self.attributes('-zoomed', True)
+            except:
+                # Caso falhe, definir tamanho grande manualmente
+                width = self.winfo_screenwidth() - 50
+                height = self.winfo_screenheight() - 50
+                self.geometry(f"{width}x{height}+25+25")
     
     def create_widgets(self):
-        # Container principal
-        main_frame = ttk.Frame(self, padding=15)
-        main_frame.pack(fill=tk.BOTH, expand=True)
+        try:
+            style = ttk.Style()
+            style.configure("TButton",
+                        background=COLORS["primary"],
+                        foreground="black",
+                        font=("Segoe UI", 10),
+                        padding=6)
         
-        # Título
-        title_label = ttk.Label(main_frame, text="Envio em Massa de Mensagens", 
-                              font=("Segoe UI", 16, "bold"),
-                              foreground=COLORS["primary"])
-        title_label.pack(anchor="w", pady=(0, 20))
+            style.map("TButton",
+                    foreground=[('disabled', 'gray'), ('pressed', 'black'), ('active', 'black')],
+                    background=[('disabled', '#cccccc'), ('pressed', COLORS["accent"]), ('active', COLORS["accent"])])
+                    
+            # Container principal
+            main_frame = ttk.Frame(self, padding=15)
+            main_frame.pack(fill=tk.BOTH, expand=True)
         
-        # Frame para selecionar arquivo CSV
-        csv_frame = ttk.LabelFrame(main_frame, text="Arquivo CSV com Contatos", padding=10)
-        csv_frame.pack(fill="x", pady=(0, 15))
+            # Título
+            title_label = ttk.Label(main_frame, text="Envio em Massa de Mensagens",
+                                font=("Segoe UI", 16, "bold"),
+                                foreground=COLORS["primary"])
+            title_label.pack(anchor="w", pady=(0, 20))
         
-        # Layout interno do frame CSV
-        csv_content = ttk.Frame(csv_frame)
-        csv_content.pack(fill="x")
+            # Frame para selecionar arquivo CSV
+            csv_frame = ttk.LabelFrame(main_frame, text="Arquivo CSV com Contatos", padding=10)
+            csv_frame.pack(fill="x", pady=(0, 15))
         
-        ttk.Label(csv_content, text="Arquivo:").grid(row=0, column=0, padx=5, pady=5, sticky="w")
-        ttk.Entry(csv_content, textvariable=self.csv_file_path, width=60).grid(row=0, column=1, padx=5, pady=5, sticky="ew")
-        ttk.Button(csv_content, text="Procurar...", command=self.browse_csv).grid(row=0, column=2, padx=5, pady=5)
+            # Layout interno do frame CSV
+            csv_content = ttk.Frame(csv_frame)
+            csv_content.pack(fill="x")
         
-        # Dicas e instruções
-        tip_label = ttk.Label(csv_content, 
-                             text="Dica: O arquivo CSV deve conter pelo menos as colunas 'telefone' e 'nome'.",
-                             font=("Segoe UI", 9, "italic"),
-                             foreground="gray")
-        tip_label.grid(row=1, column=0, columnspan=3, sticky="w", padx=5)
+            ttk.Label(csv_content, text="Arquivo:").grid(row=0, column=0, padx=5, pady=5, sticky="w")
+            ttk.Entry(csv_content, textvariable=self.csv_file_path, width=60).grid(row=0, column=1, padx=5, pady=5, sticky="ew")
+            ttk.Button(csv_content, text="Procurar...",
+            command=self.browse_csv,
+            style="Accent.TButton").grid(row=0, column=2, padx=5, pady=5)
         
-        # Frame para template
-        template_frame = ttk.LabelFrame(main_frame, text="Template da Mensagem", padding=10)
-        template_frame.pack(fill="both", expand=True, pady=(0, 15))
+            # Dicas e instruções
+            tip_label = ttk.Label(csv_content,
+                                text="Dica: O arquivo CSV deve conter pelo menos as colunas 'telefone' e 'nome'.",
+                                font=("Segoe UI", 9, "italic"),
+                                foreground="gray")
+            tip_label.grid(row=1, column=0, columnspan=3, sticky="w", padx=5)
         
-        # Texto explicativo
-        ttk.Label(template_frame, 
-                text="Selecione um template pré-aprovado ou crie uma mensagem personalizada:").pack(anchor="w", pady=(0, 10))
+            # Frame para template
+            template_frame = ttk.LabelFrame(main_frame, text="Template da Mensagem", padding=10)
+            template_frame.pack(fill="both", expand=True, pady=(0, 15))
         
-        # Área para texto do template
-        self.template_text = tk.Text(template_frame, wrap="word", height=10,
-                                   font=("Segoe UI", 10),
-                                   bg="white",
-                                   padx=10,
-                                   pady=10,
-                                   bd=1,
-                                   relief=tk.SOLID,
-                                   highlightthickness=0)
-        self.template_text.pack(fill="both", expand=True, padx=5, pady=5)
+            # Texto explicativo
+            ttk.Label(template_frame,
+                    text="Selecione um template pré-aprovado ou crie uma mensagem personalizada:").pack(anchor="w", pady=(0, 10))
         
-        # Barra de ferramentas para o template
-        tools_frame = ttk.Frame(template_frame)
-        tools_frame.pack(fill="x", padx=5, pady=5)
+            # Área para texto do template
+            self.template_text = tk.Text(template_frame, wrap="word", height=10,
+                                    font=("Segoe UI", 10),
+                                    bg="white",
+                                    padx=10,
+                                    pady=10,
+                                    bd=1,
+                                    relief=tk.SOLID,
+                                    highlightthickness=0)
+            self.template_text.pack(fill="both", expand=True, padx=5, pady=5)
         
-        # Indicação visual dos campos dinâmicos
-        ttk.Label(tools_frame, text="Campos dinâmicos:").pack(side="left", padx=(0, 5))
-        ttk.Button(tools_frame, text="{nome}", 
-                 command=lambda: self.insert_template_field("{nome}")).pack(side="left", padx=2)
-        ttk.Button(tools_frame, text="{empresa}", 
-                 command=lambda: self.insert_template_field("{empresa}")).pack(side="left", padx=2)
-        ttk.Button(tools_frame, text="{valor}", 
-                 command=lambda: self.insert_template_field("{valor}")).pack(side="left", padx=2)
+            # Barra de ferramentas para o template
+            tools_frame = ttk.Frame(template_frame)
+            tools_frame.pack(fill="x", padx=5, pady=5)
         
-        # Botão de seleção de template à direita
-        ttk.Button(tools_frame, text="Selecionar Template", 
-                 command=self.select_template).pack(side="right", padx=5)
+            # Indicação visual dos campos dinâmicos
+            ttk.Label(tools_frame, text="Campos dinâmicos:").pack(side="left", padx=(0, 5))
+            ttk.Button(tools_frame, text="{nome}",
+                    command=lambda: self.insert_template_field("{nome}"),
+                    style="Accent.TButton").pack(side="left", padx=2)
+            ttk.Button(tools_frame, text="{empresa}",
+                    command=lambda: self.insert_template_field("{empresa}"),
+                    style="Accent.TButton").pack(side="left", padx=2)
+            ttk.Button(tools_frame, text="{valor}",
+                    command=lambda: self.insert_template_field("{valor}"),
+                    style="Accent.TButton").pack(side="left", padx=2)
+            
+            # Botão de seleção de template à direita
+            ttk.Button(tools_frame, text="Selecionar Template",
+                    command=self.select_template,
+                    style="Accent.TButton").pack(side="right", padx=5)
         
-        # Frame para visualização prévia com abas
-        preview_frame = ttk.LabelFrame(main_frame, text="Visualização e Configuração", padding=10)
-        preview_frame.pack(fill="both", expand=True, pady=(0, 15))
+            # Frame para visualização prévia com abas
+            preview_frame = ttk.LabelFrame(main_frame, text="Visualização e Configuração", padding=10)
+            preview_frame.pack(fill="both", expand=True, pady=(0, 15))
         
-        # Notebook para abas
-        self.preview_notebook = ttk.Notebook(preview_frame)
-        self.preview_notebook.pack(fill="both", expand=True, padx=5, pady=5)
+            # Notebook para abas
+            self.preview_notebook = ttk.Notebook(preview_frame)
+            self.preview_notebook.pack(fill="both", expand=True, padx=5, pady=5)
         
-        # Aba de dados do CSV
-        data_tab = ttk.Frame(self.preview_notebook)
-        self.preview_notebook.add(data_tab, text="Dados do CSV")
+            # Adicione esta linha para manter referência às abas
+            self.tabs = {"data": None, "config": None, "send": None}
+
+            # Aba de dados do CSV
+            data_tab = ttk.Frame(self.preview_notebook)
+            self.preview_notebook.add(data_tab, text="Dados do CSV")
+            self.tabs["data"] = data_tab
         
-        # Treeview para dados
-        self.preview_tree = ttk.Treeview(data_tab, height=8)
-        self.preview_tree.pack(fill="both", expand=True, padx=5, pady=5)
+            # Treeview para dados
+            self.preview_tree = ttk.Treeview(data_tab, height=12, selectmode="browse")
+            self.preview_tree.pack(fill="both", expand=True, padx=5, pady=5)
+
+            # Scrollbars para o Treeview
+            tree_x_scroll = ttk.Scrollbar(data_tab, orient="horizontal", command=self.preview_tree.xview)
+            tree_x_scroll.pack(fill="x", side="bottom", padx=5)
         
-        # Scrollbars para o Treeview
-        tree_x_scroll = ttk.Scrollbar(data_tab, orient="horizontal", command=self.preview_tree.xview)
-        tree_x_scroll.pack(fill="x", side="bottom", padx=5)
+            tree_y_scroll = ttk.Scrollbar(data_tab, orient="vertical", command=self.preview_tree.yview)
+            tree_y_scroll.pack(fill="y", side="right", pady=5)
         
-        tree_y_scroll = ttk.Scrollbar(data_tab, orient="vertical", command=self.preview_tree.yview)
-        tree_y_scroll.pack(fill="y", side="right", pady=5)
+            self.preview_tree.configure(yscrollcommand=tree_y_scroll.set, xscrollcommand=tree_x_scroll.set)
         
-        self.preview_tree.configure(yscrollcommand=tree_y_scroll.set, xscrollcommand=tree_x_scroll.set)
+            # Vincular evento de seleção do Treeview
+            self.preview_tree.bind('<<TreeviewSelect>>', self.on_tree_select)
+
+            # Adicionar mensagem inicial
+            self.preview_tree["columns"] = ["mensagem"]
+            self.preview_tree["show"] = "headings"
+            self.preview_tree.heading("mensagem", text="Instruções")
+            self.preview_tree.column("mensagem", width=400, anchor="center")
+            self.preview_tree.insert("", "end", values=["Selecione um arquivo CSV clicando no botão 'Procurar...'"])
+
+            # Aba de configurações
+            config_tab = ttk.Frame(self.preview_notebook)
+            self.preview_notebook.add(config_tab, text="Configurações de Envio")
+            self.tabs["config"] = config_tab    
+
+            # Opções de configuração
+            config_options = ttk.Frame(config_tab, padding=10)
+            config_options.pack(fill="both", expand=True)
         
-        # Aba de configurações
-        config_tab = ttk.Frame(self.preview_notebook)
-        self.preview_notebook.add(config_tab, text="Configurações de Envio")
+            # Intervalo entre mensagens
+            ttk.Label(config_options, text="Intervalo entre mensagens (segundos):").grid(
+                row=0, column=0, sticky="w", pady=5, padx=5)
         
-        # Opções de configuração
-        config_options = ttk.Frame(config_tab, padding=10)
-        config_options.pack(fill="both", expand=True)
+            self.interval_var = tk.StringVar(value="10")
+            interval_spin = ttk.Spinbox(config_options, from_=1, to=60, textvariable=self.interval_var, width=5)
+            interval_spin.grid(row=0, column=1, sticky="w", pady=5, padx=5)
         
-        # Intervalo entre mensagens
-        ttk.Label(config_options, text="Intervalo entre mensagens (segundos):").grid(
-            row=0, column=0, sticky="w", pady=5, padx=5)
+            # Limite diário
+            ttk.Label(config_options, text="Limite diário de mensagens:").grid(
+                row=1, column=0, sticky="w", pady=5, padx=5)
         
-        self.interval_var = tk.StringVar(value="10")
-        interval_spin = ttk.Spinbox(config_options, from_=1, to=60, textvariable=self.interval_var, width=5)
-        interval_spin.grid(row=0, column=1, sticky="w", pady=5, padx=5)
+            self.limit_var = tk.StringVar(value="1000")
+            limit_spin = ttk.Spinbox(config_options, from_=1, to=1000, textvariable=self.limit_var, width=5)
+            limit_spin.grid(row=1, column=1, sticky="w", pady=5, padx=5)
         
-        # Limite diário
-        ttk.Label(config_options, text="Limite diário de mensagens:").grid(
-            row=1, column=0, sticky="w", pady=5, padx=5)
+            # Opções extras
+            ttk.Checkbutton(config_options, text="Confirmar antes de cada envio").grid(
+                row=2, column=0, columnspan=2, sticky="w", pady=5, padx=5)
         
-        self.limit_var = tk.StringVar(value="100")
-        limit_spin = ttk.Spinbox(config_options, from_=1, to=1000, textvariable=self.limit_var, width=5)
-        limit_spin.grid(row=1, column=1, sticky="w", pady=5, padx=5)
+            ttk.Checkbutton(config_options, text="Enviar relatório por e-mail ao finalizar").grid(
+                row=3, column=0, columnspan=2, sticky="w", pady=5, padx=5)
         
-        # Opções extras
-        ttk.Checkbutton(config_options, text="Confirmar antes de cada envio").grid(
-            row=2, column=0, columnspan=2, sticky="w", pady=5, padx=5)
+            # Aba de envio (substituindo a aba "Informações")
+            send_tab = ttk.Frame(self.preview_notebook)
+            self.preview_notebook.add(send_tab, text="Enviar")  # Renomeado para "Enviar"
+            self.tabs["send"] = send_tab
+
+            # Criar um frame para centralizar o botão
+            center_frame = ttk.Frame(send_tab)
+            center_frame.pack(fill="both", expand=True)
+
+            # Adicionar um frame interno para melhor posicionamento
+            button_container = ttk.Frame(center_frame)
+            button_container.place(relx=0.5, rely=0.5, anchor="center")
+
+            # Texto de instrução acima do botão
+            ttk.Label(
+                button_container,
+                text="Clique no botão abaixo para iniciar o envio das mensagens",
+                font=("Segoe UI", 12, "bold"),
+                foreground=COLORS["primary"]
+            ).pack(pady=(0, 20))
+
+            # Botão de envio grande e destacado
+            self.send_button = tk.Button(
+                button_container,
+                text="ENVIAR MENSAGENS",
+                command=self.send_messages,
+                bg=COLORS["primary"],
+                fg="white",
+                font=("Segoe UI", 14, "bold"),
+                padx=20,
+                pady=15,
+                cursor="hand2",
+                relief="raised",
+                bd=2
+            )
+            self.send_button.pack(pady=20)
+
+            # Texto de status abaixo do botão
+            ttk.Label(
+                button_container,
+                text="O botão será ativado quando um CSV e um template forem selecionados",
+                font=("Segoe UI", 10),
+                foreground="gray"
+            ).pack(pady=(20, 0))
+
+            # O botão começa desabilitado
+            self.send_button.config(state="disabled")
+
+            # Status e progresso
+            self.status_frame = ttk.Frame(main_frame)
+            self.status_frame.pack(fill="x", pady=(0, 10))
         
-        ttk.Checkbutton(config_options, text="Enviar relatório por e-mail ao finalizar").grid(
-            row=3, column=0, columnspan=2, sticky="w", pady=5, padx=5)
+            self.status_label = ttk.Label(self.status_frame, text="Aguardando dados...")
+            self.status_label.pack(side="left")
         
-        # Aba de simulação
-        preview_tab = ttk.Frame(self.preview_notebook)
-        self.preview_notebook.add(preview_tab, text="Simulação")
+            self.progress_bar = ttk.Progressbar(self.status_frame, mode="determinate", length=200)
+            self.progress_bar.pack(side="right")
         
-        # Área de visualização da mensagem
-        ttk.Label(preview_tab, text="Visualização da mensagem com dados reais:").pack(anchor="w", pady=(10, 5))
+            # Frame para botões de ação
+            action_frame = ttk.Frame(main_frame)
+            action_frame.pack(fill="x", pady=(0, 5))
+
+            # Apenas o botão de fechar
+            ttk.Button(
+                action_frame,
+                text="Fechar",
+                command=self.destroy
+            ).pack(side="right", padx=10, pady=10)
         
-        self.message_preview = tk.Text(preview_tab, wrap="word", height=10, 
-                                      bg=COLORS["bg_gray"], state="disabled")
-        self.message_preview.pack(fill="both", expand=True, padx=5, pady=5)
+            # Contadores
+            counter_frame = ttk.Frame(main_frame)
+            counter_frame.pack(fill="x")
         
-        ttk.Button(preview_tab, text="Simular com linha selecionada", 
-                 command=self.simulate_message).pack(anchor="e", pady=(5, 0))
-        
-        # Status e progresso
-        self.status_frame = ttk.Frame(main_frame)
-        self.status_frame.pack(fill="x", pady=(0, 10))
-        
-        self.status_label = ttk.Label(self.status_frame, text="Aguardando dados...")
-        self.status_label.pack(side="left")
-        
-        self.progress_bar = ttk.Progressbar(self.status_frame, mode="determinate", length=200)
-        self.progress_bar.pack(side="right")
-        
-        # Frame para botões de ação
-        action_frame = ttk.Frame(main_frame)
-        action_frame.pack(fill="x", pady=(0, 5))
-        
-        ttk.Button(action_frame, text="Fechar", command=self.destroy).pack(side="right", padx=5)
-        
-        self.send_button = ttk.Button(action_frame, text="Enviar Mensagens", 
-                                    style="Accent.TButton",
-                                    command=self.send_messages)
-        self.send_button.pack(side="right", padx=5)
-        
-        # Desativar botão de envio até que tudo esteja pronto
-        self.send_button.config(state="disabled")
-        
-        # Contadores
-        counter_frame = ttk.Frame(main_frame)
-        counter_frame.pack(fill="x")
-        
-        self.counter_label = ttk.Label(counter_frame, 
-                                     text="0 contatos carregados | 0 mensagens na fila")
-        self.counter_label.pack(side="left")
-    
+            self.counter_label = ttk.Label(counter_frame,
+                                        text="0 contatos carregados | 0 mensagens na fila")
+            self.counter_label.pack(side="left")
+
+        except Exception as e:
+            import traceback
+            print(f"ERRO AO CRIAR WIDGETS: {e}")
+            print(traceback.format_exc())
+            messagebox.showerror("Erro", f"Erro ao criar a interface: {str(e)}")
+
+
+
+    def on_tree_select(self, event):
+        """Responde quando o usuário seleciona uma linha na tabela de dados"""
+        pass
+
     def insert_template_field(self, field_text):
         """Insere um campo de template na posição atual do cursor"""
         self.template_text.insert(tk.INSERT, field_text)
@@ -1662,27 +1781,71 @@ class BulkSendWindow(tk.Toplevel):
     
     def load_csv_preview(self, file_path):
         try:
-            # Limpa a visualização atual
+            # Limpar a visualização atual
             for item in self.preview_tree.get_children():
                 self.preview_tree.delete(item)
             
             # Atualizar status
             self.status_label.config(text="Carregando arquivo CSV...")
             
-            # Carrega o CSV
-            df = pd.read_csv(file_path)
+            # Tentar carregar com diferentes configurações
+            df = None
+            excecoes = []
+            
+            # Tentativa 1: Separador ponto e vírgula, codificação UTF-8
+            try:
+                df = pd.read_csv(file_path, sep=';', encoding='utf-8')
+            except Exception as e:
+                excecoes.append(f"Tentativa 1: {str(e)}")
+                
+                # Tentativa 2: Separador vírgula, codificação UTF-8
+                try:
+                    df = pd.read_csv(file_path, sep=',', encoding='utf-8')
+                except Exception as e:
+                    excecoes.append(f"Tentativa 2: {str(e)}")
+                    
+                    # Tentativa 3: Codificação Latin-1
+                    try:
+                        df = pd.read_csv(file_path, encoding='latin1')
+                    except Exception as e:
+                        excecoes.append(f"Tentativa 3: {str(e)}")
+                        raise Exception("Não foi possível ler o arquivo CSV com nenhuma configuração")
+            
+            # Verificar se o DataFrame tem dados
+            if df is None or df.empty:
+                self.preview_tree["columns"] = ["mensagem"]
+                self.preview_tree["show"] = "headings"
+                self.preview_tree.heading("mensagem", text="Aviso")
+                self.preview_tree.column("mensagem", width=400, anchor="center")
+                self.preview_tree.insert("", "end", values=["O arquivo CSV está vazio"])
+                return
+            
+            # Continuar com o código original para configurar as colunas e mostrar os dados...
+
             
             # Configura as colunas
             self.preview_tree["columns"] = list(df.columns)
             self.preview_tree["show"] = "headings"
             
+            # Limpar cabeçalhos existentes e configurar novos
             for column in df.columns:
                 self.preview_tree.heading(column, text=column)
-                self.preview_tree.column(column, width=100)
+                # Ajusta a largura com base no nome da coluna
+                width = max(150, len(column) * 10)  # Aumentei a largura mínima
+                self.preview_tree.column(column, width=width, minwidth=100)
             
-            # Adiciona os dados (limitados a 10 linhas para preview)
+            # Adicionar os dados (limitados a 10 linhas para preview)
             for i, row in df.head(10).iterrows():
-                values = list(row)
+                # Converter cada valor individualmente para string
+                values = []
+                for val in row:
+                    # Tratamento para valores especiais
+                    if pd.isna(val):
+                        values.append("")
+                    else:
+                        values.append(str(val))
+                
+                # Inserir no Treeview
                 self.preview_tree.insert("", "end", values=values)
             
             # Atualizar contadores
@@ -1691,10 +1854,19 @@ class BulkSendWindow(tk.Toplevel):
             
             # Atualizar status
             self.status_label.config(text="Arquivo CSV carregado com sucesso")
+            
+            # Ativar botão de envio se um template estiver selecionado
+            if self.selected_template or self.template_text.get("1.0", tk.END).strip():
+                self.send_button.config(state="normal")
                 
         except Exception as e:
+            import traceback
+            print(f"Erro ao carregar CSV: {str(e)}")
+            print(traceback.format_exc())
             messagebox.showerror("Erro", f"Erro ao carregar o arquivo CSV: {str(e)}")
             self.status_label.config(text=f"Erro: {str(e)}")
+
+
     
     def select_template(self):
         template_selector = TemplateSelector(self)
@@ -1725,48 +1897,54 @@ class BulkSendWindow(tk.Toplevel):
                 if comp.get('type') == 'BODY' and 'text' in comp:
                     self.template_text.insert(tk.END, comp.get('text', ''))
             
-            # Ativar botão de envio se também tiver um CSV
+            # Ativar botão de envio se um CSV estiver carregado
             if self.csv_file_path.get():
                 self.send_button.config(state="normal")
             
-            # Atualizar a aba de simulação
-            self.update_preview_tab()
+            # Já não precisamos mais atualizar a aba de simulação
+            # self.update_preview_tab()  <- remova ou comente esta linha            
     
     def update_preview_tab(self):
-        """Atualiza a aba de simulação com o template selecionado"""
-        # Implementação da atualização de preview
+        """Atualiza a aba de informações"""
+        # Não precisa fazer nada aqui, a aba agora é estática
         pass
+
     
     def simulate_message(self):
         """Simula a mensagem com dados da linha selecionada do CSV"""
         selected_items = self.preview_tree.selection()
         if not selected_items:
-            messagebox.showinfo("Aviso", "Por favor, selecione uma linha na visualização do CSV para simular.")
-            return
+            return  # Sair silenciosamente se não houver seleção
         
-        item = selected_items[0]
-        values = self.preview_tree.item(item, "values")
-        
-        # Obter colunas
-        columns = self.preview_tree["columns"]
-        
-        # Criar dicionário de dados
-        data = {}
-        for i, col in enumerate(columns):
-            data[col] = values[i]
-        
-        # Obter o template
-        template_text = self.template_text.get("1.0", tk.END).strip()
-        
-        # Substituir campos
-        for key, value in data.items():
-            template_text = template_text.replace(f"{{{key}}}", str(value))
-        
-        # Mostrar na área de preview
-        self.message_preview.config(state=tk.NORMAL)
-        self.message_preview.delete(1.0, tk.END)
-        self.message_preview.insert(tk.END, template_text)
-        self.message_preview.config(state=tk.DISABLED)
+        try:
+            item = selected_items[0]
+            values = self.preview_tree.item(item, "values")
+            
+            # Obter colunas
+            columns = self.preview_tree["columns"]
+            
+            # Criar dicionário de dados
+            data = {}
+            for i, col in enumerate(columns):
+                if i < len(values):  # Verificar se há valores suficientes
+                    data[col] = values[i]
+            
+            # Obter o template
+            template_text = self.template_text.get("1.0", tk.END).strip()
+            
+            # Substituir campos
+            for key, value in data.items():
+                template_text = template_text.replace(f"{{{key}}}", str(value))
+            
+            # Mostrar na área de preview
+            self.message_preview.config(state=tk.NORMAL)
+            self.message_preview.delete(1.0, tk.END)
+            self.message_preview.insert(tk.END, template_text)
+            self.message_preview.config(state=tk.DISABLED)
+        except Exception as e:
+            print(f"Erro ao simular mensagem: {str(e)}")
+            # Não mostrar mensagem de erro para o usuário para não interromper o fluxo
+
     
     def send_messages(self):
         csv_path = self.csv_file_path.get()
@@ -1914,10 +2092,7 @@ class BulkSendWindow(tk.Toplevel):
             result = process_csv_with_dynamic_template(
                 csv_file=csv_path,
                 template_name=template_name, 
-                params_config=params_config,
-                interval=interval,
-                daily_limit=limit,
-                progress_callback=callback
+                params_config=params_config
             )
             
             # Atualizar UI quando concluir
@@ -1931,20 +2106,21 @@ class BulkSendWindow(tk.Toplevel):
             self.after(0, complete)
             
         except Exception as e:
+            # Capturar a mensagem de erro aqui, antes de definir a função interna
+            error_message = str(e)
+            print(f"Erro ao enviar mensagens: {error_message}")
+            
             # Atualizar UI em caso de erro
             def show_error():
-                self.status_label.config(text=f"Erro: {str(e)}")
+                self.status_label.config(text=f"Erro: {error_message}")  # Usar a variável local
                 self.send_button.config(state="normal")
-                messagebox.showerror("Erro", f"Erro ao enviar mensagens: {str(e)}")
+                messagebox.showerror("Erro", f"Erro ao enviar mensagens: {error_message}")  # Usar a variável local
             
             self.after(0, show_error)
-    
+
     def send_custom_messages_thread(self, csv_path, template_text, params_config, interval, limit, callback):
         """Thread para envio de mensagens personalizadas"""
         try:
-            # Similar à função process_csv_with_dynamic_template, mas para mensagens personalizadas
-            # Esta é uma implementação simplificada
-            
             # Carregar CSV
             df = pd.read_csv(csv_path)
             total = len(df)
@@ -1984,9 +2160,79 @@ class BulkSendWindow(tk.Toplevel):
                         
                         # Intervalo entre mensagens
                         time.sleep(interval)
-                    except Exception as e:
-                        print(f"Erro ao enviar para {phone}: {str(e)}")
+                    except Exception as send_error:
+                        print(f"Erro ao enviar para {phone}: {str(send_error)}")
                         # Continuar para o próximo
+            
+            # Resultado final - IMPORTANTE: não usa variáveis do escopo externo
+            def complete():
+                self.status_label.config(text=f"Envio concluído. {sent_count} mensagens enviadas.")
+                self.send_button.config(state="normal")
+                self.progress_bar["value"] = 100
+                messagebox.showinfo("Sucesso", f"Envio de mensagens concluído!\n\n{sent_count} de {total} mensagens enviadas com sucesso.")
+            
+            self.after(0, complete)
+            
+        except Exception as e:
+            # IMPORTANTE: Salvar a mensagem de erro em uma variável local
+            error_message = str(e)
+            print(f"Erro ao enviar mensagens: {error_message}")
+            
+            # Função que não depende de 'e' do escopo externo
+            def show_error():
+                self.status_label.config(text=f"Erro: {error_message}")
+                self.send_button.config(state="normal")
+                messagebox.showerror("Erro", f"Erro ao enviar mensagens: {error_message}")
+            
+            self.after(0, show_error)
+
+            
+            # Resultado final - apenas uma versão desta função
+            def complete():
+                self.status_label.config(text=f"Envio concluído. {sent_count} mensagens enviadas.")
+                self.send_button.config(state="normal")
+                self.progress_bar["value"] = 100
+                messagebox.showinfo("Sucesso", f"Envio de mensagens concluído!\n\n{sent_count} de {total} mensagens enviadas com sucesso.")
+            
+            self.after(0, complete)
+            
+        except Exception as e:
+            error_message = str(e)
+            print(f"Erro ao enviar mensagens: {error_message}")
+            
+            # Atualizar UI em caso de erro - apenas uma versão desta função
+            def show_error():
+                self.status_label.config(text=f"Erro: {error_message}")
+                self.send_button.config(state="normal")
+                messagebox.showerror("Erro", f"Erro ao enviar mensagens: {error_message}")
+            
+            self.after(0, show_error)
+
+          
+            # Resultado final
+            def complete():
+                self.status_label.config(text=f"Envio concluído. {sent_count} mensagens enviadas.")
+                self.send_button.config(state="normal")
+                self.progress_bar["value"] = 100
+                messagebox.showinfo("Sucesso", f"Envio de mensagens concluído!\n\n{sent_count} de {total} mensagens enviadas com sucesso.")
+            
+            self.after(0, complete)
+            
+        except Exception as e:
+            # Capturar a mensagem de erro aqui, antes de definir a função interna
+            error_message = str(e)
+            print(f"Erro ao enviar mensagens: {error_message}")
+            
+            # Atualizar UI em caso de erro
+            def show_error():
+                self.status_label.config(text=f"Erro: {error_message}")  # Usar a variável local
+                self.send_button.config(state="normal")
+                messagebox.showerror("Erro", f"Erro ao enviar mensagens: {error_message}")  # Usar a variável local
+            
+            self.after(0, show_error)
+
+
+
             
             # Resultado final
             def complete():
@@ -2022,12 +2268,21 @@ def main():
     root = tk.Tk()
     root.title("WhatsApp API Client")
     
+    # Maximizar a janela principal
+    root.state('zoomed')  # Para Windows
+
+
     # Configurar estilos para ttk
     style = ttk.Style()
     style.configure("TFrame", background=COLORS["bg_gray"])
     style.configure("TLabel", background=COLORS["bg_gray"], foreground=COLORS["text_gray"])
-    style.configure("TButton", background=COLORS["primary"], foreground="white")
+    style.configure("TButton", background=COLORS["primary"], foreground="black")
     
+    style.map("TButton",
+    foreground=[('active', 'black'), ('disabled', 'gray')],
+    background=[('active', COLORS["accent"])]
+    )
+
     # Estilo para botão de acento
     style.configure("Accent.TButton", background=COLORS["accent"], foreground="white")
     
@@ -2042,7 +2297,13 @@ def main():
     
     # Frame para nome da conversa
     style.configure("ContactName.TLabel", foreground="white", font=("Segoe UI", 12, "bold"))
-    
+    # Estilo para caixas de diálogo
+    root.option_add('*Dialog.msg.font', 'Segoe UI 10')
+    root.option_add('*Dialog.msg.background', COLORS["bg_gray"])
+    root.option_add('*Dialog.msg.foreground', COLORS["text_gray"])
+    root.option_add('*Dialog.Button.background', COLORS["accent"])
+    root.option_add('*Dialog.Button.foreground', "white")
+
     app = WhatsAppInterface(root)
     
     # Centralizar a janela na tela
